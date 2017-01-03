@@ -1,0 +1,88 @@
+---
+
+ - name: test a storage element
+   hosts: localhost
+   gather_facts: False
+   force_handlers: True
+   become: False
+
+   handlers:
+     - name: arcrm SRM cleanup
+       command: arcrm srm://{{ server }}{{path}}/{{ file }}
+     - name: cleanup2 local file
+       file: path=/tmp/{{ file }} state=absent
+     - name: cleanup3 local filessss
+       file: path=/tmp/{{ file }}{{ item }} state=absent
+       with_items:
+        - 2
+        - 3
+        - 4
+        - 5
+
+   tasks:
+     - block:
+
+       - name: findproxy validity - fails if no (valid) proxy found 
+         command: arcproxy -i validityLeft
+         register: reg_arcproxy
+         changed_when: False
+         failed_when:
+           - reg_arcproxy.rc != 0 or reg_arcproxy.stdout|int == 0
+
+       - name: arcls SRM dir
+         command: "arcls srm://{{ server }}{{ path }}"
+         register: reg_arcls
+         when: server is defined and path is defined
+
+       - name: arcls SRM path / file
+         command: "arcls srm://{{ server }}{{ path }}/{{ file }}"
+         register: reg_arclsfile
+         failed_when: False
+         when: server is defined and path is defined and file is defined
+
+       - name: arcrm SRM file first if it exists
+         command: "arcrm srm://{{ server }}{{ path }}/{{ file }}"
+         when: 
+          - reg_arclsfile.rc|int == 0
+          - (server is defined and path is defined and file is defined)
+
+       - name: xrdfs ls
+         command: "xrdfs root://{{ server }}{{ path }}"
+         register: reg_xrdfs
+         when: server is defined and path is defined
+
+       - name: arccp SRM here to there
+         command: "arccp /bin/bash srm://{{ server }}{{ path }}/{{ file }}"
+         notify: cleanup
+         when: server is defined and path is defined and file is defined
+
+       - name: arccp SRM there to here
+         command: "arccp srm://{{ server }}{{ path }}/{{ file }} /tmp/{{ file }}"
+         notify: cleanup2
+         when: server is defined and path is defined and file is defined
+
+       - name: xrdcp there to here
+         command: "xrdcp root://{{ server }}{{ path }}/{{ file }} /tmp/{{ file }}2"
+         notify: cleanup3
+         when: server is defined and path is defined and file is defined
+
+       - name: xrdcp from xrootd federation server1 to here
+         command: "xrdcp root://{{ xfed_server1 }}{{ xfed_pathfile }} /tmp/{{ file }}3"
+         notify: cleanup3
+         when: xfed_server1 is defined and xfed_pathfile is defined
+
+       - name: xrdcp from xrootd federation server2 to here
+         command: "xrdcp root://{{ xfed_server2 }}{{ xfed_pathfile }} /tmp/{{ file }}4"
+         notify: cleanup3
+         when: xfed_server2 is defined and xfed_pathfile is defined
+
+       - name: xrdcp from xrootd federation server3 to here
+         command: "xrdcp root://{{ xfed_server3 }}{{ xfed_pathfile }} /tmp/{{ file }}5"
+         notify: cleanup3
+         when: xfed_server3 is defined and xfed_pathfile is defined
+
+
+       delegate_to: localhost
+       # end of block
+
+...
