@@ -7,11 +7,11 @@
    become: False
 
    handlers:
-     - name: arcrm SRM cleanup
+     - name: cleanup
        command: arcrm srm://{{ server }}{{path}}/{{ file }}
-     - name: cleanup2 local file
+     - name: cleanup2
        file: path=/tmp/{{ file }} state=absent
-     - name: cleanup3 local filessss
+     - name: cleanup3
        file: path=/tmp/{{ file }}{{ item }} state=absent
        with_items:
         - 2
@@ -61,6 +61,7 @@
          notify: cleanup2
          when: server is defined and path is defined and file is defined
 
+
        - name: xrdcp there to here
          command: "xrdcp root://{{ server }}{{ path }}/{{ file }} /tmp/{{ file }}2"
          notify: cleanup3
@@ -80,8 +81,6 @@
          command: "xrdcp root://{{ xfed_server3 }}{{ xfed_pathfile }} /tmp/{{ file }}5"
          notify: cleanup3
          when: xfed_server3 is defined and xfed_pathfile is defined
-
-
        delegate_to: localhost
        # end of block
 
