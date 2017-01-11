@@ -35,10 +35,10 @@
         - 6
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
-       ignore_errors: True
+       when: reg_xrdcp_write.rc|int == 0
      - name: cleanup_webdav_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_webdav_write
-       ignore_errors: True
+       when: reg_webdav_write.rc|int == 0
 
    tasks:
      - block:
