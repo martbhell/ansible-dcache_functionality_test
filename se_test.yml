@@ -103,13 +103,22 @@
          notify: cleanup3
          when: xfed_server3 is defined and xfed_pathfile is defined
 
-       - name: debug print that checksums are all the same
+       - name: debug print checksums of fetched files
          debug: var={{ item }}.stat.checksum verbosity=1
          when: server is defined and path is defined and file is defined
          with_items:
-           - "reg_bash"
            - "reg_bash_1"
            - "reg_bash_2"
+
+       - name: assert that checksums are all the same
+         assert:
+           that:
+             - "bash_checksum == {{ item }}.stat.checksum"
+         when: server is defined and path is defined and file is defined
+         with_items:
+           - "reg_bash_1"
+           - "reg_bash_2"
+
        delegate_to: localhost
        # end of block
 
