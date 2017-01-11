@@ -2,7 +2,7 @@
 
  - name: test a storage element
    hosts: localhost
-   gather_facts: False
+   gather_facts: True
    force_handlers: True
    become: False
 
