@@ -22,12 +22,16 @@
    tasks:
      - block:
 
+# Safety 
+
        - name: findproxy validity - fails if no (valid) proxy found 
          command: arcproxy -i validityLeft
          register: reg_arcproxy
          changed_when: False
          failed_when:
            - reg_arcproxy.rc != 0 or reg_arcproxy.stdout|int == 0
+
+# Listing and cleanup
 
        - name: arcls SRM dir
          command: "arcls srm://{{ server }}{{ path }}"
@@ -51,6 +55,8 @@
          register: reg_xrdfs
          when: server is defined and path is defined
 
+# Checksum of original file
+
        - name: stat bash
          stat: path=/bin/bash
          register: reg_bash
@@ -58,6 +64,8 @@
        - name: store bash checksum in a fact
          set_fact: 
            bash_checksum: "{{ reg_bash.stat.checksum }}"
+
+# Copy files here and there
 
        - name: arccp SRM here to there
          command: "arccp /bin/bash srm://{{ server }}{{ path }}/{{ file }}"
@@ -69,11 +77,12 @@
          notify: cleanup2
          when: server is defined and path is defined and file is defined
 
-
        - name: xrdcp there to here
          command: "xrdcp root://{{ server }}{{ path }}/{{ file }} /tmp/{{ file }}2"
          notify: cleanup3
          when: server is defined and path is defined and file is defined
+
+# Checksum after copying
 
        - name: stat fetched bash file
          stat: path=/tmp/{{ file }}
@@ -84,21 +93,6 @@
          stat: path=/tmp/{{ file }}2
          register: reg_bash_2
          when: server is defined and path is defined and file is defined
-
-       - name: xrdcp from xrootd federation server1 to here
-         command: "xrdcp root://{{ xfed_server1 }}{{ xfed_pathfile }} /tmp/{{ file }}3"
-         notify: cleanup3
-         when: xfed_server1 is defined and xfed_pathfile is defined
-
-       - name: xrdcp from xrootd federation server2 to here
-         command: "xrdcp root://{{ xfed_server2 }}{{ xfed_pathfile }} /tmp/{{ file }}4"
-         notify: cleanup3
-         when: xfed_server2 is defined and xfed_pathfile is defined
-
-       - name: xrdcp from xrootd federation server3 to here
-         command: "xrdcp root://{{ xfed_server3 }}{{ xfed_pathfile }} /tmp/{{ file }}5"
-         notify: cleanup3
-         when: xfed_server3 is defined and xfed_pathfile is defined
 
        - name: debug print checksums of fetched files
          debug: var={{ item }}.stat.checksum verbosity=1
@@ -116,8 +110,25 @@
            - "reg_bash_1"
            - "reg_bash_2"
 
+# Federation
 
-        # One could use glue-validator instead for BDII testing
+       - name: xrdcp from xrootd federation server1 to here
+         command: "xrdcp root://{{ xfed_server1 }}{{ xfed_pathfile }} /tmp/{{ file }}3"
+         notify: cleanup3
+         when: xfed_server1 is defined and xfed_pathfile is defined
+
+       - name: xrdcp from xrootd federation server2 to here
+         command: "xrdcp root://{{ xfed_server2 }}{{ xfed_pathfile }} /tmp/{{ file }}4"
+         notify: cleanup3
+         when: xfed_server2 is defined and xfed_pathfile is defined
+
+       - name: xrdcp from xrootd federation server3 to here
+         command: "xrdcp root://{{ xfed_server3 }}{{ xfed_pathfile }} /tmp/{{ file }}5"
+         notify: cleanup3
+         when: xfed_server3 is defined and xfed_pathfile is defined
+
+# Information system: One could use https://github.com/quinot/ansible-plugin-lookup_ldap instead - or perhaps glue-validator
+
        - name: ldapsearch tool comes from openldap-clients on redhat
          command: "rpm -qa openldap-clients"
          register: reg_openldap
