@@ -14,6 +14,7 @@
      ldap_port: 2170
      ldap_gluename: "GlueSESizeTotal"
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
+     https_write_expected_return_code: 1 # set this to 0 to expect a write success
 
    handlers:
      - name: cleanup
@@ -30,6 +31,9 @@
         - 6
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
+       ignore_errors: True
+     - name: cleanup_https_write
+       command: arcrm srm://{{ server }}{{path}}/{{ file }}_https_write
        ignore_errors: True
 
    tasks:
@@ -63,6 +67,12 @@
          failed_when: False
          when: server is defined and path is defined and file is defined
 
+       - name: arcls SRM path / file_xrdcp write
+         command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_https_write"
+         register: reg_arclsfile_https_write
+         failed_when: False
+         when: server is defined and path is defined and file is defined
+
        - name: arcrm SRM file_xrdcp write first if it exists
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_write"
          when: 
@@ -73,6 +83,12 @@
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}"
          when: 
           - reg_arclsfile.rc|int == 0
+          - (server is defined and path is defined and file is defined)
+
+       - name: arcrm SRM https_file first if it exists
+         command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_https_write"
+         when: 
+          - reg_arclsfile_https_write.rc|int == 0
           - (server is defined and path is defined and file is defined)
 
        - name: xrdfs ls
@@ -115,6 +131,20 @@
          register: reg_xrdcp_write
          failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code|int
          notify: cleanup_xrdcp_write
+
+# Https/webdav
+
+       - name: arccp https here to there
+         command: "arccp /bin/bash https://{{ https_server }}:2880{{ path }}/{{ file }}_write_https"
+         register: reg_https_write
+         notify: cleanup_https_write
+         failed_when: reg_https_write.rc != https_write_expected_return_code|int
+         when: server is defined and path is defined and file is defined
+
+       - name: arccp https there to here
+         command: "arccp https://{{ https_server }}:2880{{ path }}/{{ file }} /tmp/{{ file }}6"
+         notify: cleanup3
+         when: server is defined and path is defined and file is defined
 
 # Checksum after copying
 
