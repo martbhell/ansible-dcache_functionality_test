@@ -117,8 +117,7 @@
            - "reg_bash_2"
 
 
-        # TODO: use glue-validator instead?
-
+        # One could use glue-validator instead for BDII testing
        - name: ldapsearch tool comes from openldap-clients on redhat
          command: "rpm -qa openldap-clients"
          register: reg_openldap
@@ -135,6 +134,7 @@
          shell: "ldapsearch -LL -x -H ldap://{{ server }}:2170 -b o=grid GlueSESizeTotal|grep -c ^GlueSESizeTotal"
          register: reg_ldapsearch
          failed_when: reg_ldapsearch.rc != 0 or reg_ldapsearch.stdout != "1"
+         changed_when: reg_ldapsearch.stdout != "1"
          when: enable_ldap_testing
 
        - name: debug print ldapsearch

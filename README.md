@@ -7,6 +7,9 @@ An ansible playbook to test a storage element.
  - listing
  - writing
  - reading
+ - checksum comparison of written and fetched files
+
+Also possible to test BDII
 
 ## dependencies
 
@@ -14,6 +17,8 @@ An ansible playbook to test a storage element.
   - arcproxy, arcls and arccp
  - xrootd-client
   - xrdfs and xrdcp
+ - openldap-clients (or ldap-utils)
+  - ldapsearch
 
 ## requirements
 
@@ -29,5 +34,5 @@ ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/direc
 </pre>
 or
 <pre>
-ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/directory/in/namespace/where/I/haz/write/FOO -e file=BARZ -e xfed_server1=xrootdfederationhost1.example.com -e xfed_server2=xrootdfederationhost2.example.com -e xfed_pathfile=//store/user/myuser/AAAAAAAAAAAAA-AAAA-AAAA-AAAA-NOTREAL
+ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/directory/in/namespace/where/I/haz/write/FOO -e file=BARZ -e xfed_server1=xrootdfederationhost1.example.com -e xfed_server2=xrootdfederationhost2.example.com -e xfed_pathfile=//store/user/myuser/AAAAAAAAAAAAA-AAAA-AAAA-AAAA-NOTREAL -e enable_ldap_testin=True
 </pre>
