@@ -13,6 +13,7 @@
      srm_server: "{{ server }}"
      ldap_port: 2170
      ldap_gluename: "GlueSESizeTotal"
+     xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
 
    handlers:
      - name: cleanup
@@ -26,6 +27,7 @@
         - 3
         - 4
         - 5
+        - 6
 
    tasks:
      - block:
@@ -89,6 +91,15 @@
          command: "xrdcp root://{{ xrootd_server }}{{ path }}/{{ file }} /tmp/{{ file }}2"
          notify: cleanup3
          when: server is defined and path is defined and file is defined
+
+# Try to write with xrdcp too
+
+       - name: xrdcp here to there - fail if return code is not xrdcp_write_expected_return_code
+         command: "xrdcp /bin/bash root://{{ xrootd_server }}{{ path }}/{{ file }}6"
+         when: server is defined and path is defined and file is defined
+         register: reg_xrdcp_write
+         failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code
+         notify: cleanup3
 
 # Checksum after copying
 
