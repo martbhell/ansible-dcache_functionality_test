@@ -11,6 +11,7 @@
      ldap_server: "{{ server }}"
      xrootd_server: "{{ server }}"
      srm_server: "{{ server }}"
+     https_server: "{{ server }}"
      ldap_port: 2170
      ldap_gluename: "GlueSESizeTotal"
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
@@ -67,7 +68,7 @@
          failed_when: False
          when: server is defined and path is defined and file is defined
 
-       - name: arcls SRM path / file_xrdcp write
+       - name: arcls SRM path / file_https write
          command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_https_write"
          register: reg_arclsfile_https_write
          failed_when: False
