@@ -11,11 +11,14 @@
      ldap_server: "{{ server }}"
      xrootd_server: "{{ server }}"
      srm_server: "{{ server }}"
-     https_server: "{{ server }}"
+     webdav_server: "{{ server }}"
+     webdav_protocol: "http"
+     enable_ldap_testing: False
      ldap_port: 2170
      ldap_gluename: "GlueSESizeTotal"
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
-     https_write_expected_return_code: 1 # set this to 0 to expect a write success
+     enable_webdav_testing: True
+     webdav_write_expected_return_code: 1 # set this to 0 to expect a write success
 
    handlers:
      - name: cleanup
@@ -33,8 +36,8 @@
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
        ignore_errors: True
-     - name: cleanup_https_write
-       command: arcrm srm://{{ server }}{{path}}/{{ file }}_https_write
+     - name: cleanup_webdav_write
+       command: arcrm srm://{{ server }}{{path}}/{{ file }}_webdav_write
        ignore_errors: True
 
    tasks:
@@ -68,9 +71,9 @@
          failed_when: False
          when: server is defined and path is defined and file is defined
 
-       - name: arcls SRM path / file_https write
-         command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_https_write"
-         register: reg_arclsfile_https_write
+       - name: arcls SRM path / file_webdav write
+         command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_webdav_write"
+         register: reg_arclsfile_webdav_write
          failed_when: False
          when: server is defined and path is defined and file is defined
 
@@ -86,10 +89,10 @@
           - reg_arclsfile.rc|int == 0
           - (server is defined and path is defined and file is defined)
 
-       - name: arcrm SRM https_file first if it exists
-         command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_https_write"
+       - name: arcrm SRM webdav_file first if it exists
+         command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_webdav_write"
          when: 
-          - reg_arclsfile_https_write.rc|int == 0
+          - reg_arclsfile_webdav_write.rc|int == 0
           - (server is defined and path is defined and file is defined)
 
        - name: xrdfs ls
@@ -135,15 +138,15 @@
 
 # Https/webdav
 
-       - name: arccp https here to there
-         command: "arccp /bin/bash https://{{ https_server }}:2880{{ path }}/{{ file }}_write_https"
-         register: reg_https_write
-         notify: cleanup_https_write
-         failed_when: reg_https_write.rc != https_write_expected_return_code|int
+       - name: arccp webdav here to there
+         command: "arccp /bin/bash {{ webdav_protocol }}://{{ webdav_server }}:2880{{ path }}/{{ file }}_write_webdav"
+         register: reg_webdav_write
+         notify: cleanup_webdav_write
+         failed_when: reg_webdav_write.rc != webdav_write_expected_return_code|int
          when: server is defined and path is defined and file is defined
 
-       - name: arccp https there to here
-         command: "arccp https://{{ https_server }}:2880{{ path }}/{{ file }} /tmp/{{ file }}6"
+       - name: arccp webdav there to here
+         command: "arccp {{ webdav_protocol }}://{{ webdav_server }}:2880{{ path }}/{{ file }} /tmp/{{ file }}6"
          notify: cleanup3
          when: server is defined and path is defined and file is defined
 
