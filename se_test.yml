@@ -30,6 +30,7 @@
         - 6
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
+       ignore_errors: True
 
    tasks:
      - block:
