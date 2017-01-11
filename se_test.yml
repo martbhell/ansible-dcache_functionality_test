@@ -55,9 +55,6 @@
          stat: path=/bin/bash
          register: reg_bash
 
-       - name: print bash checksum
-         debug: var=reg_bash.stat.checksum verbosity=1
-
        - name: store bash checksum in a fact
          set_fact: 
            bash_checksum: "{{ reg_bash.stat.checksum }}"
@@ -118,6 +115,32 @@
          with_items:
            - "reg_bash_1"
            - "reg_bash_2"
+
+
+        # TODO: use glue-validator instead?
+
+       - name: ldapsearch tool comes from openldap-clients on redhat
+         command: "rpm -qa openldap-clients"
+         register: reg_openldap
+         failed_when: reg_openldap.stdout == ""
+         when: ansible_os_family == "RedHat" and enable_ldap_testing
+
+       - name: ldapsearch tool comes from ldap-utils on debian
+         command: "dpkg --get-selections ldap-utils"
+         register: reg_ldap_utils
+         failed_when: reg_ldap_utils.stdout == ""
+         when: ansible_os_family == "Debian" and enable_ldap_testing
+
+       - name: shell ldapsearch towards server port 2170 and grep for GlueSESizeTotal
+         shell: "ldapsearch -LL -x -H ldap://{{ server }}:2170 -b o=grid GlueSESizeTotal|grep -c ^GlueSESizeTotal"
+         register: reg_ldapsearch
+         failed_when: reg_ldapsearch.rc != 0 or reg_ldapsearch.stdout != "1"
+         when: enable_ldap_testing
+
+       - name: debug print ldapsearch
+         debug: var=reg_ldapsearch verbosity=1
+         when: enable_ldap_testing
+
 
        delegate_to: localhost
        # end of block
