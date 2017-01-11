@@ -28,6 +28,8 @@
         - 4
         - 5
         - 6
+     - name: cleanup_xrdcp_write
+       command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
 
    tasks:
      - block:
@@ -95,11 +97,11 @@
 # Try to write with xrdcp too
 
        - name: xrdcp here to there - fail if return code is not xrdcp_write_expected_return_code
-         command: "xrdcp /bin/bash root://{{ xrootd_server }}{{ path }}/{{ file }}6"
+         command: "xrdcp /bin/bash root://{{ xrootd_server }}{{ path }}/{{ file }}_write"
          when: server is defined and path is defined and file is defined
          register: reg_xrdcp_write
          failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code
-         notify: cleanup3
+         notify: cleanup_xrdcp_write
 
 # Checksum after copying
 
