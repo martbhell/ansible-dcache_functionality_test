@@ -51,6 +51,17 @@
          register: reg_xrdfs
          when: server is defined and path is defined
 
+       - name: stat bash
+         stat: path=/bin/bash
+         register: reg_bash
+
+       - name: print bash checksum
+         debug: var=reg_bash.stat.checksum verbosity=1
+
+       - name: store bash checksum in a fact
+         set_fact: 
+           bash_checksum: "{{ reg_bash.stat.checksum }}"
+
        - name: arccp SRM here to there
          command: "arccp /bin/bash srm://{{ server }}{{ path }}/{{ file }}"
          notify: cleanup
@@ -67,6 +78,16 @@
          notify: cleanup3
          when: server is defined and path is defined and file is defined
 
+       - name: stat fetched bash file
+         stat: path=/tmp/{{ file }}
+         register: reg_bash_1
+         when: server is defined and path is defined and file is defined
+
+       - name: stat fetched bash file2
+         stat: path=/tmp/{{ file }}2
+         register: reg_bash_2
+         when: server is defined and path is defined and file is defined
+
        - name: xrdcp from xrootd federation server1 to here
          command: "xrdcp root://{{ xfed_server1 }}{{ xfed_pathfile }} /tmp/{{ file }}3"
          notify: cleanup3
@@ -81,6 +102,14 @@
          command: "xrdcp root://{{ xfed_server3 }}{{ xfed_pathfile }} /tmp/{{ file }}5"
          notify: cleanup3
          when: xfed_server3 is defined and xfed_pathfile is defined
+
+       - name: debug print that checksums are all the same
+         debug: var={{ item }}.stat.checksum verbosity=1
+         when: server is defined and path is defined and file is defined
+         with_items:
+           - "reg_bash"
+           - "reg_bash_1"
+           - "reg_bash_2"
        delegate_to: localhost
        # end of block
 
