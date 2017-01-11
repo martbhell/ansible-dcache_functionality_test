@@ -12,6 +12,8 @@ An ansible playbook to test a storage element.
  - checksum comparison of written and fetched files
  - test that some Glue data is published in BDII
 
+It assumes a few things (for example that srm/bdii/xrootd are all reacahable from the same SRM and are on default ports), but that and in general most things should be configurable.
+
 ## dependencies
 
  - nordugrid-arc-client
@@ -35,7 +37,7 @@ ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/direc
 </pre>
 or
 <pre>
-ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/directory/in/namespace/where/I/haz/write/FOO -e file=BARZ -e xfed_server1=xrootdfederationhost1.example.com -e xfed_server2=xrootdfederationhost2.example.com -e xfed_pathfile=//store/user/myuser/AAAAAAAAAAAAA-AAAA-AAAA-AAAA-NOTREAL -e enable_ldap_testin=True
+ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/directory/in/namespace/where/I/haz/write/FOO -e file=BARZ -e xfed_server1=xrootdfederationhost1.example.com -e xfed_server2=xrootdfederationhost2.example.com -e xfed_pathfile=//store/user/myuser/AAAAAAAAAAAAA-AAAA-AAAA-AAAA-NOTREAL -e enable_ldap_testin=True -e xrootd_server=notmyhost.example.com -e ldap_server=alsonotmyhost.example.com -e srm_server=yetanothernotmyhost.example.com
 </pre>
 
 ## TODO:
