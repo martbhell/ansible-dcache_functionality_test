@@ -112,7 +112,7 @@
          command: "xrdcp /bin/bash root://{{ xrootd_server }}{{ path }}/{{ file }}_write"
          when: server is defined and path is defined and file is defined
          register: reg_xrdcp_write
-         failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code
+         failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code|int
          notify: cleanup_xrdcp_write
 
 # Checksum after copying
