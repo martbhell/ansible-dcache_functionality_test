@@ -56,6 +56,18 @@
          failed_when: False
          when: server is defined and path is defined and file is defined
 
+       - name: arcls SRM path / file_xrdcp write
+         command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_write"
+         register: reg_arclsfile_xrdcp_write
+         failed_when: False
+         when: server is defined and path is defined and file is defined
+
+       - name: arcrm SRM file_xrdcp write first if it exists
+         command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_write"
+         when: 
+          - reg_arclsfile_xrdcp_write.rc|int == 0
+          - (server is defined and path is defined and file is defined)
+
        - name: arcrm SRM file first if it exists
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}"
          when: 
