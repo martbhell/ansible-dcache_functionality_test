@@ -9,16 +9,27 @@
    vars:
      # these can be overridden with adding parameter "-e variable=value" to the ansible-playbook command
      ldap_server: "{{ server }}"
-     xrootd_server: "{{ server }}"
-     srm_server: "{{ server }}"
-     webdav_server: "{{ server }}"
+     xrootd_port: "1094"
+     xrootd_server: "{{ server }}:{{ xrootd_port }}"
+     srm_port: "8443"
+     srm_server: "{{ server }}:{{ srm_port }}"
+     webdav_port: "2880"
+     webdav_server: "{{ server }}:{{ webdav_port }}"
      webdav_protocol: "http"
      enable_ldap_testing: False
+     enable_gfal2_testing: True
      ldap_port: 2170
      ldap_gluename: "GlueSESizeTotal"
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
      enable_webdav_testing: True
      webdav_write_expected_return_code: 1 # set this to 0 to expect a write success
+     gfal2_packages:
+          - "util"
+          - "plugin-srm"
+          - "plugin-xrootd"
+          - "plugin-gridftp"
+          - "plugin-http"
+          - "plugin-file"
 
    handlers:
      - name: cleanup
@@ -52,17 +63,41 @@
          failed_when:
            - reg_arcproxy.rc != 0 or reg_arcproxy.stdout|int == 0
 
+# 
+
+       - name: command rpm check if the gfal2_rpms are installed
+         command: rpm -q gfal2-{{ item }}
+         register: reg_gfal2_rpms
+         with_items: "{{ gfal2_packages }}"
+         changed_when: reg_gfal2_rpms.rc != 0
+         ignore_errors: True
+         when: ansible_os_family == "RedHat" and enable_gfal2_testing
+
+       - name: if gfal2-util is installed test with that too
+         set_fact: 
+           ls_program: [ 'arcls', 'gfal-ls' ]
+           xrootd_ls_program: [ 'xrdfs', 'gfal-ls' ]
+         when: reg_gfal2_rpms is defined and reg_gfal2_rpms.results[0]['rc']|int == 0
+
+       - name: otherwise just use arcls or xrdfs
+         set_fact: 
+           ls_program: [ 'arcls' ]
+           xrootd_ls_program: [ 'xrdfs' ]
+         when: reg_gfal2_rpms is not defined or reg_gfal2_rpms.results[0]['rc']|int != 0
+
 # Listing and cleanup
 
        - name: arcls SRM dir
-         command: "arcls srm://{{ srm_server }}{{ path }}"
+         command: "{{ item }} srm://{{ srm_server }}{{ path }}"
          register: reg_arcls
          when: server is defined and path is defined
+         with_items: "{{ ls_program }}"
 
        - name: arcls SRM path / file
-         command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}"
+         command: "{{ item }} srm://{{ srm_server }}{{ path }}/{{ file }}"
          register: reg_arclsfile
          failed_when: False
+         with_items: "{{ ls_program }}"
          when: server is defined and path is defined and file is defined
 
        - name: arcls SRM path / file_xrdcp write
@@ -77,6 +112,8 @@
          failed_when: False
          when: server is defined and path is defined and file is defined
 
+# Cleanup
+
        - name: arcrm SRM file_xrdcp write first if it exists
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_write"
          when: 
@@ -86,7 +123,7 @@
        - name: arcrm SRM file first if it exists
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}"
          when: 
-          - reg_arclsfile.rc|int == 0
+          - reg_arclsfile.results.0.rc|int == 0
           - (server is defined and path is defined and file is defined)
 
        - name: arcrm SRM webdav_file first if it exists
@@ -95,9 +132,13 @@
           - reg_arclsfile_webdav_write.rc|int == 0
           - (server is defined and path is defined and file is defined)
 
-       - name: xrdfs ls
-         command: "xrdfs root://{{ xrootd_server }}{{ path }}"
+
+# xrootd ls
+
+       - name: root:// endpoint listing
+         command: "{{ item }} root://{{ xrootd_server }}{{ path }}"
          register: reg_xrdfs
+         with_items: "{{ xrootd_ls_program }}"
          when: server is defined and path is defined
 
 # Checksum of original file
