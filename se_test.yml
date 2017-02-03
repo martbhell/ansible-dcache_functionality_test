@@ -8,6 +8,7 @@
 
    vars:
      # these can be overridden with adding parameter "-e variable=value" to the ansible-playbook command
+     source_file : "/bin/bash"
      ldap_server: "{{ server }}"
      xrootd_port: "1094"
      xrootd_server: "{{ server }}:{{ xrootd_port }}"
@@ -143,18 +144,18 @@
 
 # Checksum of original file
 
-       - name: stat bash
-         stat: path=/bin/bash
-         register: reg_bash
+       - name: stat source_file
+         stat: path={{ source_file }}
+         register: reg_source_file
 
-       - name: store bash checksum in a fact
+       - name: store source_file checksum in a fact
          set_fact: 
-           bash_checksum: "{{ reg_bash.stat.checksum }}"
+           source_checksum: "{{ reg_source_file.stat.checksum }}"
 
 # Copy files here and there
 
        - name: arccp SRM here to there
-         command: "arccp /bin/bash srm://{{ srm_server }}{{ path }}/{{ file }}"
+         command: "arccp {{ source_file }} srm://{{ srm_server }}{{ path }}/{{ file }}"
          notify: cleanup
          when: server is defined and path is defined and file is defined
 
@@ -171,7 +172,7 @@
 # Try to write with xrdcp too
 
        - name: xrdcp here to there - fail if return code is not xrdcp_write_expected_return_code
-         command: "xrdcp /bin/bash root://{{ xrootd_server }}{{ path }}/{{ file }}_write"
+         command: "xrdcp {{ source_file }} root://{{ xrootd_server }}{{ path }}/{{ file }}_write"
          when: server is defined and path is defined and file is defined
          register: reg_xrdcp_write
          failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code|int
@@ -180,7 +181,7 @@
 # Https/webdav
 
        - name: arccp webdav here to there
-         command: "arccp /bin/bash {{ webdav_protocol }}://{{ webdav_server }}:2880{{ path }}/{{ file }}_write_webdav"
+         command: "arccp {{ source_file }} {{ webdav_protocol }}://{{ webdav_server }}:2880{{ path }}/{{ file }}_write_webdav"
          register: reg_webdav_write
          notify: cleanup_webdav_write
          failed_when: reg_webdav_write.rc != webdav_write_expected_return_code|int
@@ -193,31 +194,31 @@
 
 # Checksum after copying
 
-       - name: stat fetched bash file
+       - name: stat fetched source_file
          stat: path=/tmp/{{ file }}
-         register: reg_bash_1
+         register: reg_source_1
          when: server is defined and path is defined and file is defined
 
-       - name: stat fetched bash file2
+       - name: stat fetched source_file2
          stat: path=/tmp/{{ file }}2
-         register: reg_bash_2
+         register: reg_source_2
          when: server is defined and path is defined and file is defined
 
        - name: debug print checksums of fetched files
          debug: var={{ item }}.stat.checksum verbosity=1
          when: server is defined and path is defined and file is defined
          with_items:
-           - "reg_bash_1"
-           - "reg_bash_2"
+           - "reg_source_1"
+           - "reg_source_2"
 
        - name: assert that checksums are all the same
          assert:
            that:
-             - "bash_checksum == {{ item }}.stat.checksum"
+             - "source_checksum == {{ item }}.stat.checksum"
          when: server is defined and path is defined and file is defined
          with_items:
-           - "reg_bash_1"
-           - "reg_bash_2"
+           - "reg_source_1"
+           - "reg_source_2"
 
 # Federation
 
