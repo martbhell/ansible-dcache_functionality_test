@@ -52,7 +52,7 @@ ansible-playbook se_test.yml -e server=myhost.example.com -e path=/path/to/direc
 With this command:
 <pre>
 ansible-playbook se_test.yml -e server=se.example.com -e path=/pnfs/csc.fi/data/cms/FOO -e file=BARZ -e enable_ldap_testing=True -e source_file=/bin/bash -vv
-<pre>
+</pre>
 
 Get an output like this:
 <pre>
