@@ -8,7 +8,7 @@
 
    vars:
      # these can be overridden with adding parameter "-e variable=value" to the ansible-playbook command
-     source_file : "/bin/bash"
+     source_file: "/bin/bash"
      ldap_server: "{{ server }}"
      xrootd_port: "1094"
      xrootd_server: "{{ server }}:{{ xrootd_port }}"
