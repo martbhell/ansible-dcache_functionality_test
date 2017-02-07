@@ -183,7 +183,7 @@
 
        - name: copy files to SRM 
          command: "{{ item }} {{ source_file }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
-         notify: cleanup_before_rename
+         notify: cleanup_rename_before
          with_items: "{{ cp_program }}"
          when: server is defined and path is defined and file is defined
 
@@ -191,7 +191,7 @@
 
        - name: rename srm files
          command: "{{ item[1] }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item[0] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ item[0] }}"
-         notify: cleanup_after_rename
+         notify: cleanup_rename_after
          with_nested:
           - "{{ cp_program }}"
           - "{{ rename_program }}"
