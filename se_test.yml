@@ -54,6 +54,12 @@
      - name: cleanup_mkdir
        command: arcrm srm://{{ srm_server }}{{path}}/mkdir_{{ item }}
        with_items: "{{ mkdir_program }}"
+     - name: cleanup_rename_before
+       command: arcrm srm://{{ srm_server }}{{path}}/{{ file }}_before_{{ item }}
+       with_items: "{{ cp_program }}"
+     - name: cleanup_rename_after
+       command: arcrm srm://{{ srm_server }}{{path}}/{{ file }}_after_{{ item }}
+       with_items: "{{ cp_program }}"
 
    tasks:
      - block:
@@ -82,6 +88,8 @@
            ls_program: [ 'arcls', 'gfal-ls' ]
            xrootd_ls_program: [ 'xrdfs', 'gfal-ls' ]
            mkdir_program: [ 'arcmkdir', 'gfal-mkdir' ]
+           cp_program: [ 'arccp', 'gfal-copy' ]
+           rename_program: [ 'arcrename', 'gfal-rename' ]
          when: reg_gfal2_rpms is defined and reg_gfal2_rpms.results[0]['rc']|int == 0
 
        - name: otherwise just use arcls or xrdfs
@@ -166,12 +174,30 @@
          set_fact: 
            source_checksum: "{{ reg_source_file.stat.checksum }}"
 
-# Copy files here and there
+# Copy files from here to there
 
        - name: arccp SRM here to there
          command: "arccp {{ source_file }} srm://{{ srm_server }}{{ path }}/{{ file }}"
          notify: cleanup
          when: server is defined and path is defined and file is defined
+
+       - name: copy files to SRM 
+         command: "{{ item }} {{ source_file }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
+         notify: cleanup_before_rename
+         with_items: "{{ cp_program }}"
+         when: server is defined and path is defined and file is defined
+
+# Rename
+
+       - name: rename srm files
+         command: "{{ item[1] }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item[0] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ item[0] }}"
+         notify: cleanup_after_rename
+         with_nested:
+          - "{{ cp_program }}"
+          - "{{ rename_program }}"
+         when: server is defined and path is defined and file is defined
+
+# Copy files from there to here
 
        - name: arccp SRM there to here
          command: "arccp srm://{{ srm_server }}{{ path }}/{{ file }} /tmp/{{ file }}"
