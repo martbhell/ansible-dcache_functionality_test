@@ -51,6 +51,9 @@
      - name: cleanup_webdav_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_webdav_write
        when: reg_webdav_write.rc|int == 0
+     - name: cleanup_mkdir
+       command: arcrm srm://{{ srm_server }}{{path}}/mkdir_{{ item }}
+       with_items: "{{ mkdir_program }}"
 
    tasks:
      - block:
@@ -78,6 +81,7 @@
          set_fact: 
            ls_program: [ 'arcls', 'gfal-ls' ]
            xrootd_ls_program: [ 'xrdfs', 'gfal-ls' ]
+           mkdir_program: [ 'arcmkdir', 'gfal-mkdir' ]
          when: reg_gfal2_rpms is defined and reg_gfal2_rpms.results[0]['rc']|int == 0
 
        - name: otherwise just use arcls or xrdfs
@@ -141,6 +145,16 @@
          register: reg_xrdfs
          with_items: "{{ xrootd_ls_program }}"
          when: server is defined and path is defined
+
+# mkdirs
+
+       - name: mkdir SRM dir
+         command: "{{ item }} srm://{{ srm_server }}{{ path }}/mkdir_{{ item }}"
+         register: reg_mkdir
+         when: server is defined and path is defined
+         with_items: "{{ mkdir_program }}"
+         notify: cleanup_mkdir
+
 
 # Checksum of original file
 
