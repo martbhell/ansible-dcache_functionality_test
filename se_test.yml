@@ -54,9 +54,6 @@
      - name: cleanup_mkdir
        command: arcrm srm://{{ srm_server }}{{path}}/mkdir_{{ item }}
        with_items: "{{ mkdir_program }}"
-     - name: cleanup_rename_before
-       command: arcrm srm://{{ srm_server }}{{path}}/{{ file }}_before_{{ item }}
-       with_items: "{{ cp_program }}"
      - name: cleanup_rename_after
        command: arcrm srm://{{ srm_server }}{{path}}/{{ file }}_after_{{ item }}
        with_items: "{{ cp_program }}"
@@ -189,13 +186,17 @@
 
 # Rename
 
-       - name: rename srm files
-         command: "{{ item[1] }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item[0] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ item[0] }}"
+       - name: rename srm files cp_program 0
+         command: "{{ item }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ cp_program[0] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ cp_program[0] }}"
          notify: cleanup_rename_after
-         with_nested:
-          - "{{ cp_program }}"
-          - "{{ rename_program }}"
-         when: server is defined and path is defined and file is defined
+         with_items: "{{ rename_program }}"
+         when: server is defined and path is defined and file is defined and cp_program[0] is defined
+
+       - name: rename srm files cp_program 1
+         command: "{{ item }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ cp_program[1] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ cp_program[1] }}"
+         notify: cleanup_rename_after
+         with_nested: "{{ rename_program }}"
+         when: server is defined and path is defined and file is defined and cp_program[1] is defined
 
 # Copy files from there to here
 
