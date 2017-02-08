@@ -218,7 +218,7 @@
        - name: rename srm files cp_program 1 with rename_program 1
          command: "{{ item }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ cp_program[1] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ cp_program[1] }}"
          notify: cleanup_rename_after
-         with_dict: "{{ rename_program[1] }}"
+         with_items: "{{ rename_program[1] }}"
          when: server is defined and path is defined and file is defined and cp_program[1] is defined and rename_program[1] is defined
 
 # Copy files from there to here
