@@ -122,6 +122,14 @@
          failed_when: False
          when: server is defined and path is defined and file is defined
 
+       - name: arcls SRM path / cp_programs
+         command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
+         register: reg_arclsfile_cp_program
+         failed_when: False
+         with_items: "{{ cp _program }}"
+         when: server is defined and path is defined and file is defined
+
+
 # Cleanup
 
        - name: arcrm SRM file_xrdcp write first if it exists
@@ -149,6 +157,12 @@
           - (server is defined and path is defined and file is defined and mkdir_program is defined)
          ignore_errors: True
 
+       - name: arcrm SRM cp_program files first if they exist
+         command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
+         with_items: "{{ cp_program }}"
+         when: 
+          - reg_arclsfile_cp_program.0.rc|int == 0
+          - (server is defined and path is defined and file is defined)
 
 # xrootd ls
 
