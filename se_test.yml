@@ -126,8 +126,11 @@
          command: "arcls srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
          register: reg_arclsfile_cp_program
          failed_when: False
-         with_items: "{{ cp _program }}"
+         with_items: "{{ cp_program }}"
          when: server is defined and path is defined and file is defined
+
+       - name: debug print arcls cp_programs
+         debug: var=reg_arclsfile_cp_program verbosity=3
 
 
 # Cleanup
@@ -161,7 +164,7 @@
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
          with_items: "{{ cp_program }}"
          when: 
-          - reg_arclsfile_cp_program.0.rc|int == 0
+          - reg_arclsfile_cp_program.results[0].rc|int == 0
           - (server is defined and path is defined and file is defined)
 
 # xrootd ls
@@ -199,24 +202,24 @@
          notify: cleanup
          when: server is defined and path is defined and file is defined
 
-       - name: copy files to SRM 
+       - name: copy files to SRM with cp_programs
          command: "{{ item }} {{ source_file }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
          with_items: "{{ cp_program }}"
          when: server is defined and path is defined and file is defined
 
 # Rename
 
-       - name: rename srm files cp_program 0
+       - name: rename srm files cp_program 0 with rename_program 0
          command: "{{ item }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ cp_program[0] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ cp_program[0] }}"
          notify: cleanup_rename_after
-         with_items: "{{ rename_program }}"
-         when: server is defined and path is defined and file is defined and cp_program[0] is defined
+         with_items: "{{ rename_program[0] }}"
+         when: server is defined and path is defined and file is defined and cp_program[0] is defined and rename_program[1] is defined
 
-       - name: rename srm files cp_program 1
+       - name: rename srm files cp_program 1 with rename_program 1
          command: "{{ item }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ cp_program[1] }} srm://{{ srm_server }}{{ path }}/{{ file }}_after_{{ cp_program[1] }}"
          notify: cleanup_rename_after
-         with_nested: "{{ rename_program }}"
-         when: server is defined and path is defined and file is defined and cp_program[1] is defined
+         with_dict: "{{ rename_program[1] }}"
+         when: server is defined and path is defined and file is defined and cp_program[1] is defined and rename_program[1] is defined
 
 # Copy files from there to here
 
