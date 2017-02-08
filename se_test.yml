@@ -260,19 +260,19 @@
          register: reg_webdav_write
          notify: cleanup_webdav_write
          failed_when: reg_webdav_write.rc != webdav_write_expected_return_code|int
-         when: server is defined and path is defined and file is defined and enable_webdav_testing == True
+         when: server is defined and path is defined and file is defined and enable_webdav_testing|bool
 
        - name: arccp webdav there to here
          command: "arccp {{ webdav_protocol }}://{{ webdav_server }}{{ path }}/{{ file }} /tmp/{{ file }}6"
          notify: cleanup3
-         when: server is defined and path is defined and file is defined and enable_webdav_testing == True
+         when: server is defined and path is defined and file is defined and enable_webdav_testing|bool
 
        - name: ansible get_url webdav there to here
          get_url:
            url: "{{ webdav_protocol }}://{{ webdav_server }}{{ path }}/{{ file }}"
            dest: "/tmp/{{ file}}7"
          notify: cleanup3
-         when: server is defined and path is defined and file is defined and enable_webdav_geturl_testing == True
+         when: server is defined and path is defined and file is defined and enable_webdav_geturl_testing|bool
 
        - name: curl webdav there to here
          command: "curl --show-error --connect-timeout 300 --max-time 3600 --cacert {{ 
@@ -280,8 +280,7 @@ reg_x509_cert.stdout }} --capath {{ webdav_curl_ca_path }} --cert {{ reg_x509_ce
 ut }} --key {{ reg_x509_cert.stdout }} -L {{ webdav_protocol }}://{{ webdav_server }}{{
  path }}/{{ file }} -o /tmp/{{ file }}8"
          notify: cleanup3
-         when: server is defined and path is defined and file is defined and enable_web
-dav_curl_testing == True
+         when: server is defined and path is defined and file is defined and enable_webdav_curl_testing|bool
 
 # Checksum after copying
 
