@@ -23,6 +23,7 @@
      ldap_gluename: "GlueSESizeTotal"
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
      enable_webdav_testing: True
+     enable_webdav_geturl_testing: "{{ enable_webdav_testing }}"
      webdav_write_expected_return_code: 1 # set this to 0 to expect a write success
      gfal2_packages:
           - "util"
@@ -45,6 +46,7 @@
         - 4
         - 5
         - 6
+        - 7
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
        when: reg_xrdcp_write.rc|int == 0
@@ -245,16 +247,23 @@
 # Https/webdav
 
        - name: arccp webdav here to there
-         command: "arccp {{ source_file }} {{ webdav_protocol }}://{{ webdav_server }}:2880{{ path }}/{{ file }}_write_webdav"
+         command: "arccp {{ source_file }} {{ webdav_protocol }}://{{ webdav_server }}{{ path }}/{{ file }}_write_webdav"
          register: reg_webdav_write
          notify: cleanup_webdav_write
          failed_when: reg_webdav_write.rc != webdav_write_expected_return_code|int
-         when: server is defined and path is defined and file is defined
+         when: server is defined and path is defined and file is defined and enable_webdav_testing == True
 
        - name: arccp webdav there to here
-         command: "arccp {{ webdav_protocol }}://{{ webdav_server }}:2880{{ path }}/{{ file }} /tmp/{{ file }}6"
+         command: "arccp {{ webdav_protocol }}://{{ webdav_server }}{{ path }}/{{ file }} /tmp/{{ file }}6"
          notify: cleanup3
-         when: server is defined and path is defined and file is defined
+         when: server is defined and path is defined and file is defined and enable_webdav_testing == True
+
+       - name: ansible get_url webdav there to here
+         get_url:
+           url: "{{ webdav_protocol }}://{{ webdav_server }}{{ path }}/{{ file }}"
+           dest: "/tmp/{{ file}}7"
+         notify: cleanup3
+         when: server is defined and path is defined and file is defined and enable_webdav_geturl_testing == True
 
 # Checksum after copying
 
@@ -275,6 +284,7 @@
            - "reg_source_1"
            - "reg_source_2"
 
+        # TODO: Could also add /tmp/{{ file }}7 if webdav_testing is enabled
        - name: assert that checksums are all the same
          assert:
            that:
