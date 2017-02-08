@@ -142,6 +142,13 @@
           - reg_arclsfile_webdav_write.rc|int == 0
           - (server is defined and path is defined and file is defined)
 
+       - name: arcrm SRM dirs if they exist
+         command: "arcrm srm://{{ srm_server }}{{ path }}/mkdir_{{ item }}"
+         with_items: "{{ mkdir_program }}"
+         when: 
+          - (server is defined and path is defined and file is defined and mkdir_program is defined)
+         ignore_errors: True
+
 
 # xrootd ls
 
