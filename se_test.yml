@@ -23,7 +23,9 @@
      ldap_gluename: "GlueSESizeTotal"
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
      enable_webdav_testing: True
-     enable_webdav_geturl_testing: "{{ enable_webdav_testing }}"
+     enable_webdav_geturl_testing: True
+     enable_webdav_curl_testing: True
+     webdav_curl_ca_path: "/etc/grid-security/certificates/"
      webdav_write_expected_return_code: 1 # set this to 0 to expect a write success
      gfal2_packages:
           - "util"
@@ -47,6 +49,7 @@
         - 5
         - 6
         - 7
+        - 8
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
        when: reg_xrdcp_write.rc|int == 0
@@ -73,6 +76,12 @@
            - reg_arcproxy.rc != 0 or reg_arcproxy.stdout|int == 0
 
 # 
+       - name: fetch path to X509 proxy file
+         command: arcproxy -i path
+         register: reg_x509_cert
+
+       - name: debug print x509 cert path
+         debug: var=reg_x509_cert.stdout verbosity=2
 
        - name: command rpm check if the gfal2_rpms are installed
          command: rpm -q gfal2-{{ item }}
@@ -264,6 +273,15 @@
            dest: "/tmp/{{ file}}7"
          notify: cleanup3
          when: server is defined and path is defined and file is defined and enable_webdav_geturl_testing == True
+
+       - name: curl webdav there to here
+         command: "curl --show-error --connect-timeout 300 --max-time 3600 --cacert {{ 
+reg_x509_cert.stdout }} --capath {{ webdav_curl_ca_path }} --cert {{ reg_x509_cert.stdo
+ut }} --key {{ reg_x509_cert.stdout }} -L {{ webdav_protocol }}://{{ webdav_server }}{{
+ path }}/{{ file }} -o /tmp/{{ file }}8"
+         notify: cleanup3
+         when: server is defined and path is defined and file is defined and enable_web
+dav_curl_testing == True
 
 # Checksum after copying
 
