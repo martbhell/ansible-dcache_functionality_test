@@ -180,7 +180,6 @@
 
        - name: copy files to SRM 
          command: "{{ item }} {{ source_file }} srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
-         notify: cleanup_rename_before
          with_items: "{{ cp_program }}"
          when: server is defined and path is defined and file is defined
 
