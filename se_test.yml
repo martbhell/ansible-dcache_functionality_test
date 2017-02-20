@@ -275,10 +275,7 @@
          when: server is defined and path is defined and file is defined and enable_webdav_geturl_testing|bool
 
        - name: curl webdav there to here
-         command: "curl --show-error --connect-timeout 300 --max-time 3600 --cacert {{ 
-reg_x509_cert.stdout }} --capath {{ webdav_curl_ca_path }} --cert {{ reg_x509_cert.stdo
-ut }} --key {{ reg_x509_cert.stdout }} -L {{ webdav_protocol }}://{{ webdav_server }}{{
- path }}/{{ file }} -o /tmp/{{ file }}8"
+         command: "curl --show-error --connect-timeout 300 --max-time 3600 --cacert {{ reg_x509_cert.stdout }} --capath {{ webdav_curl_ca_path }} --cert {{ reg_x509_cert.stdout }} --key {{ reg_x509_cert.stdout }} -L {{ webdav_protocol }}://{{ webdav_server }}{{ path }}/{{ file }} -o /tmp/{{ file }}8"
          notify: cleanup3
          when: server is defined and path is defined and file is defined and enable_webdav_curl_testing|bool
 
