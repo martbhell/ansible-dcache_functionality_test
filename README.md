@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/martbhell/ansible-dcache_functionality_test.svg?branch=master)](https://travis-ci.org/martbhell/ansible-dcache_functionality_test)
+
 # se_test.yml
 
 **A failed task/play means a test did not succeed.**
