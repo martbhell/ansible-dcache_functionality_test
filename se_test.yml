@@ -75,10 +75,12 @@
          failed_when:
            - reg_arcproxy.rc != 0 or reg_arcproxy.stdout|int == 0
 
-# 
+# Set/Gather some helper variables
+
        - name: fetch path to X509 proxy file
          command: arcproxy -i path
          register: reg_x509_cert
+         changed_when: False
 
        - name: debug print x509 cert path
          debug: var=reg_x509_cert.stdout verbosity=2
@@ -91,7 +93,7 @@
          ignore_errors: True
          when: ansible_os_family == "RedHat" and enable_gfal2_testing
 
-       - name: if gfal2-util is installed test with that too
+       - name: set facts differently if gfal2-util is installed test with that too
          set_fact: 
            ls_program: [ 'arcls', 'gfal-ls' ]
            xrootd_ls_program: [ 'xrdfs', 'gfal-ls' ]
@@ -100,13 +102,13 @@
            rename_program: [ 'arcrename', 'gfal-rename' ]
          when: reg_gfal2_rpms is defined and reg_gfal2_rpms.results[0]['rc']|int == 0
 
-       - name: otherwise just use arcls or xrdfs
+       - name: set facts otherwise just use arcls or xrdfs
          set_fact: 
            ls_program: [ 'arcls' ]
            xrootd_ls_program: [ 'xrdfs' ]
          when: reg_gfal2_rpms is not defined or reg_gfal2_rpms.results[0]['rc']|int != 0
 
-# Listing and cleanup
+# Listing
 
        - name: arcls SRM dir
          command: "{{ item }} srm://{{ srm_server }}{{ path }}"
@@ -144,7 +146,7 @@
          debug: var=reg_arclsfile_cp_program verbosity=3
 
 
-# Cleanup
+# Cleanup of some CTRL+C aborts
 
        - name: arcrm SRM file_xrdcp write first if it exists
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_write"
@@ -194,7 +196,6 @@
          when: server is defined and path is defined
          with_items: "{{ mkdir_program }}"
          notify: cleanup_mkdir
-
 
 # Checksum of original file
 
@@ -308,7 +309,7 @@
            - "reg_source_1"
            - "reg_source_2"
 
-# Federation
+# Xrootd Federation
 
        - name: xrdcp from xrootd federation server1 to here
          command: "xrdcp root://{{ xfed_server1 }}{{ xfed_pathfile }} /tmp/{{ file }}3"
