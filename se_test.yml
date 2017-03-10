@@ -101,6 +101,7 @@
            mkdir_program: [ 'arcmkdir', 'gfal-mkdir' ]
            cp_program: [ 'arccp', 'gfal-copy' ]
            rename_program: [ 'arcrename', 'gfal-rename' ]
+           source_files: ["reg_source_1", "reg_source_2" ]
          when: reg_gfal2_rpms is defined and reg_gfal2_rpms.results[0]['rc']|int == 0
 
        - name: set facts otherwise just use arcls
@@ -110,6 +111,7 @@
            mkdir_program: [ 'arcmkdir' ]
            cp_program: [ 'arccp' ]
            rename_program: [ 'arcrename' ]
+           source_files: ["reg_source_1" ]
          when: reg_gfal2_rpms is not defined or reg_gfal2_rpms.results[0]['rc']|int != 0
 
 # Listing
@@ -294,14 +296,12 @@
        - name: stat fetched source_file2
          stat: path=/tmp/{{ file }}2
          register: reg_source_2
-         when: server is defined and path is defined and file is defined
+         when: server is defined and path is defined and file is defined and test_xrootd|bool
 
        - name: debug print checksums of fetched files
          debug: var={{ item }}.stat.checksum verbosity=1
          when: server is defined and path is defined and file is defined
-         with_items:
-           - "reg_source_1"
-           - "reg_source_2"
+         with_items: "{{ source_files }}"
 
         # TODO: Could also add /tmp/{{ file }}7 if webdav_testing is enabled
        - name: assert that checksums are all the same
@@ -309,9 +309,7 @@
            that:
              - "source_checksum == {{ item }}.stat.checksum"
          when: server is defined and path is defined and file is defined
-         with_items:
-           - "reg_source_1"
-           - "reg_source_2"
+         with_items: "{{ source_files }}"
 
 # Xrootd Federation
 
