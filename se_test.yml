@@ -247,13 +247,13 @@
        - name: xrdcp there to here
          command: "xrdcp root://{{ xrootd_server }}{{ path }}/{{ file }} /tmp/{{ file }}2"
          notify: cleanup3
-         when: server is defined and path is defined and file is defined and test_xrootd
+         when: server is defined and path is defined and file is defined and test_xrootd|bool
 
 # Try to write with xrdcp too
 
        - name: xrdcp here to there - fail if return code is not xrdcp_write_expected_return_code
          command: "xrdcp {{ source_file }} root://{{ xrootd_server }}{{ path }}/{{ file }}_write"
-         when: server is defined and path is defined and file is defined and test_xrootd
+         when: server is defined and path is defined and file is defined and test_xrootd|bool
          register: reg_xrdcp_write
          failed_when: reg_xrdcp_write.rc != xrdcp_write_expected_return_code|int
          notify: cleanup_xrdcp_write
