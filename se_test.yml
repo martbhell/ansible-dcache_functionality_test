@@ -102,10 +102,13 @@
            rename_program: [ 'arcrename', 'gfal-rename' ]
          when: reg_gfal2_rpms is defined and reg_gfal2_rpms.results[0]['rc']|int == 0
 
-       - name: set facts otherwise just use arcls or xrdfs
+       - name: set facts otherwise just use arcls
          set_fact: 
            ls_program: [ 'arcls' ]
-           xrootd_ls_program: [ 'xrdfs' ]
+           xrootd_ls_program: []
+           mkdir_program: [ 'arcmkdir' ]
+           cp_program: [ 'arccp' ]
+           rename_program: [ 'arcrename' ]
          when: reg_gfal2_rpms is not defined or reg_gfal2_rpms.results[0]['rc']|int != 0
 
 # Listing
@@ -186,7 +189,7 @@
          command: "{{ item }} root://{{ xrootd_server }}{{ path }}"
          register: reg_xrdfs
          with_items: "{{ xrootd_ls_program }}"
-         when: server is defined and path is defined
+         when: server is defined and path is defined and xrootd_ls_program != []
 
 # mkdirs
 
