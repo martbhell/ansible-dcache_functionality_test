@@ -179,11 +179,18 @@
           - (server is defined and path is defined and file is defined and mkdir_program is defined)
          ignore_errors: True
 
-       - name: arcrm SRM cp_program files first if they exist
+       - name: arcrm SRM cp_program 0 files first if they exist
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
-         with_items: "{{ cp_program }}"
+         with_items: "{{ cp_program[0] }}"
          when: 
           - reg_arclsfile_cp_program.results[0].rc|int == 0
+          - (server is defined and path is defined and file is defined)
+
+       - name: arcrm SRM cp_program 1 files first if they exist
+         command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
+         with_items: "{{ cp_program[1] }}"
+         when: 
+          - reg_arclsfile_cp_program.results[1].rc|int == 0
           - (server is defined and path is defined and file is defined)
 
 # xrootd ls
