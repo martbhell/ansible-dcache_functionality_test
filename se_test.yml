@@ -183,6 +183,7 @@
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
          with_items: "{{ cp_program[0] }}"
          when: 
+          - cp_program[0] is defined
           - reg_arclsfile_cp_program.results[0].rc|int == 0
           - (server is defined and path is defined and file is defined)
 
@@ -190,6 +191,7 @@
          command: "arcrm srm://{{ srm_server }}{{ path }}/{{ file }}_before_{{ item }}"
          with_items: "{{ cp_program[1] }}"
          when: 
+          - cp_program[1] is defined
           - reg_arclsfile_cp_program.results[1].rc|int == 0
           - (server is defined and path is defined and file is defined)
 
