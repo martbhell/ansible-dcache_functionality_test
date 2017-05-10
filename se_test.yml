@@ -23,6 +23,7 @@
      ldap_gluename: "GlueSESizeTotal"
      test_xrootd: True
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
+     xrdcp_cmstfc_expected_return_code: 0 # set this to 0 to expect a read success
      enable_webdav_testing: True
      enable_webdav_geturl_testing: True
      enable_webdav_curl_testing: True
@@ -43,14 +44,7 @@
        file: path=/tmp/{{ file }} state=absent
      - name: cleanup3
        file: path=/tmp/{{ file }}{{ item }} state=absent
-       with_items:
-        - 2
-        - 3
-        - 4
-        - 5
-        - 6
-        - 7
-        - 8
+       with_items: [ 2,3,4,5,6,7,8,9 ]
      - name: cleanup_xrdcp_write
        command: arcrm srm://{{ server }}{{path}}/{{ file }}_write
        when: reg_xrdcp_write.rc|int == 0
@@ -336,6 +330,13 @@
          command: "xrdcp root://{{ xfed_server3 }}{{ xfed_pathfile }} /tmp/{{ file }}5"
          notify: cleanup3
          when: xfed_server3 is defined and xfed_pathfile is defined
+
+       - name: xrdcp from our xrootd server with cms-tfc plugin
+         command: "xrdcp root://{{ server }}{{ xfed_pathfile }} /tmp/{{ file }}9"
+         notify: cleanup3
+         register: reg_xrdcp_cms_tfc
+         failed_when: reg_xrdcp_cms_tfc.rc|int != xrdcp_cmstfc_expected_return_code
+         when: xfed_server1 is defined and xfed_pathfile is defined
 
 # Information system: One could use https://github.com/quinot/ansible-plugin-lookup_ldap instead - or perhaps glue-validator
 
