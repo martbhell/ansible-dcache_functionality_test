@@ -23,6 +23,7 @@
      ldap_gluename: "GlueSESizeTotal"
      test_xrootd: True
      xrdcp_write_expected_return_code: 0 # set this to 54 to expect a write failure
+     xfed_cmstfc_test: False # set to True to test cmstfc
      xrdcp_cmstfc_expected_return_code: 0 # set this to 0 to expect a read success
      enable_webdav_testing: True
      enable_webdav_geturl_testing: True
@@ -336,7 +337,7 @@
          notify: cleanup3
          register: reg_xrdcp_cms_tfc
          failed_when: reg_xrdcp_cms_tfc.rc|int != xrdcp_cmstfc_expected_return_code
-         when: xfed_server1 is defined and xfed_pathfile is defined
+         when: xfed_cmstfc_test and xfed_pathfile is defined
 
 # Information system: One could use https://github.com/quinot/ansible-plugin-lookup_ldap instead - or perhaps glue-validator
 
